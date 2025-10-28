@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>睡眠內視鏡評分工具</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h2>三總耳鼻喉科林醫師</h2>
+
+  <input type="file" id="upload" accept="video/*" />
+  <div id="video-container">
+    <div id="obstruction-result"></div>
+
+    <video id="video" controls></video><br>
+    <label>時間區間：</label>
+    <input type="range" id="interval-start" min="0" max="0" value="0" step="0.1" />
+    <span id="interval-start-label">0:00</span> - <span id="interval-end-label">0:10</span><br>
+    <button id="capture">切片</button>
+    <button id="exportJson">匯出 JSON</button>
+    <div id="thumbnails"></div>
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox">
+    <canvas id="canvas"></canvas>
+    <div id="controls">
+      <button id="toggleMode">多邊形</button>
+      <button id="saveArea">儲存</button>
+      <button id="closeLightbox">關閉</button>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
