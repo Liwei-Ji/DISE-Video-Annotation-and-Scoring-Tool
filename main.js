@@ -18,6 +18,7 @@ const saveAreaBtn=document.getElementById('saveArea');
 let intervalDuration=10, intervalEnd=10;
 let areaData = []; // 🟢 儲存面積資料 [ {src, area}, ... ]
 
+// 載入影片並初始化預設的時間區間
 upload.addEventListener('change',()=>{
   const file=upload.files[0]; if(!file)return;
   const url=URL.createObjectURL(file);
@@ -34,7 +35,7 @@ upload.addEventListener('change',()=>{
     endLabel.textContent = formatTime(180);
   },{once:true});
 });
-
+// 👉 手動調整區間起點時，更新切圖時間起始點 
 intervalStart.addEventListener('input',()=>{
   const start=parseFloat(intervalStart.value);
   intervalEnd=start+intervalDuration;
