@@ -18,29 +18,91 @@ const saveAreaBtn=document.getElementById('saveArea');
 let intervalDuration=10, intervalEnd=10;
 let areaData = []; // 🟢 儲存面積資料 [ {src, area}, ... ]
 
-// 載入影片並初始化預設的時間區間
 upload.addEventListener('change',()=>{
   const file=upload.files[0]; if(!file)return;
   const url=URL.createObjectURL(file);
   video.src=url; videoContainer.style.display='block';
   video.addEventListener('loadedmetadata',()=>{
-    const duration=video.duration;
-    // 👉 設定時間區間為 10 秒 ~ 3 分鐘
-    intervalStart.value = 10;    // 起點 10 秒
-    intervalDuration = 180 - 10; // 結束 3 分鐘（180 秒）
-    intervalEnd = 180;
+  const duration=video.duration;
+  // 設定初始起點
+  const start = 0;
+  // 結束點 = 影片長度
+  const end = duration;
 
-    intervalStart.max = Math.max(0, duration - intervalDuration);
-    startLabel.textContent = formatTime(10);
-    endLabel.textContent = formatTime(180);
-  },{once:true});
+  intervalStart.value = start;
+  intervalStart.max = end;
+  intervalDuration = end - start;
+  intervalEnd = end;
+
+  startLabel.textContent = formatTime(start);
+  endLabel.textContent = formatTime(end);
 });
-// 👉 手動調整區間起點時，更新切圖時間起始點 
-intervalStart.addEventListener('input',()=>{
-  const start=parseFloat(intervalStart.value);
-  intervalEnd=start+intervalDuration;
-  startLabel.textContent=formatTime(start);
-  endLabel.textContent=formatTime(intervalEnd);
+
+  // === 產生時間軸縮圖 ===
+const timeThumbs = document.getElementById('time-thumbnails');
+
+async function generateTimelineThumbnails(video, duration) {
+  timeThumbs.innerHTML = '';
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 80;
+  canvas.height = 45;
+
+  const tempVideo = document.createElement('video');
+  tempVideo.src = video.src;
+  tempVideo.muted = true;
+
+  const totalFrames = Math.min(120, Math.ceil(duration / 2)); // 最多120張
+  const interval = duration / totalFrames;
+  timeThumbs.style.width = `${totalFrames * 80}px`;
+
+  let currentFrame = 0;
+  tempVideo.addEventListener('seeked', () => {
+    ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+    const img = document.createElement('img');
+    img.src = canvas.toDataURL();
+    timeThumbs.appendChild(img);
+    currentFrame++;
+    if (currentFrame < totalFrames) {
+      tempVideo.currentTime = currentFrame * interval;
+    }
+  });
+
+  tempVideo.addEventListener('loadeddata', () => {
+    tempVideo.currentTime = 0;
+  });
+}
+
+// 當影片載入好時呼叫縮圖生成
+video.addEventListener('loadedmetadata', () => {
+  const duration = video.duration;
+  generateTimelineThumbnails(video, duration);
+}, { once: true });
+
+// 縮圖滑桿與影片時間移動
+function updateTimelineScroll() {
+  const maxScroll = timeThumbs.scrollWidth - document.getElementById('track-container').clientWidth;
+  const percent = video.currentTime / video.duration;
+  timeThumbs.style.transform = `translateX(${-maxScroll * percent}px)`;
+}
+
+intervalStart.addEventListener('input', () => {
+  const start = parseFloat(intervalStart.value);
+  video.currentTime = start;
+  updateTimelineScroll();
+});
+
+video.addEventListener('timeupdate', updateTimelineScroll);
+
+});
+
+intervalStart.addEventListener('input', () => {
+  const start = parseFloat(intervalStart.value);
+  // 不要超過影片時間長度
+  intervalEnd = Math.min(start + intervalDuration, video.duration); 
+  // 更新時間顯示
+  startLabel.textContent = formatTime(start);
+  endLabel.textContent = formatTime(intervalEnd);
 });
 
 captureBtn.addEventListener('click',async()=>{
